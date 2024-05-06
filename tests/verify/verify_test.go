@@ -12,6 +12,26 @@ type iface interface {
 	Foo(a int) int
 }
 
+type iface_mock_arg interface {
+	MockAsArg(m iface)
+}
+
+func TestVerifyMockAsArg(t *testing.T) {
+	r := common.NewMockReporter(t)
+	SetUp(r)
+	m := Mock[iface]()
+	m2 := Mock[iface_mock_arg]()
+
+	m2.MockAsArg(m)
+
+	// This works:
+	// Verify(m2, Once()).MockAsArg(Exact[iface](m))
+	// This doesn't:
+	Verify(m2, Once()).MockAsArg(Any[iface]())
+
+	r.AssertNoError()
+}
+
 func TestVerifySimple(t *testing.T) {
 	r := common.NewMockReporter(t)
 	SetUp(r)
