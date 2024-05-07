@@ -12,6 +12,36 @@ type ByteArrInterface interface {
 	DoSomething(b [16]byte) string
 }
 
+type OtherIface interface {
+	SomeMethod() bool
+}
+
+type CallingIface interface {
+	GetMocked(appClient OtherIface) OtherIface
+}
+
+func TestMockWithMockedArg(t *testing.T) {
+	r := common.NewMockReporter(t)
+	SetUp(r)
+
+	callingMock := Mock[CallingIface]()
+	otherMock := Mock[OtherIface]()
+
+	// Switch Exact[OtherIface](clientMock) with Any[OtherIface]()
+	WhenSingle(callingMock.GetMocked(Exact[OtherIface](otherMock))).ThenReturn(otherMock)
+
+	res := callingMock.GetMocked(otherMock)
+
+	// Switch Exact[OtherIface](clientMock) with Any[OtherIface]()
+	Verify(callingMock, Times(1)).GetMocked(Exact[OtherIface](otherMock))
+
+	VerifyNoMoreInteractions(callingMock)
+
+	r.AssertEqual(otherMock, res)
+
+	r.AssertNoError()
+}
+
 func TestByteArrayArgs(t *testing.T) {
 	r := common.NewMockReporter(t)
 	SetUp(r)
